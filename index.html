@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AssessmentHub</title>
+
+  <!-- Link to CSS file -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js for dashboard graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <header class="app-header">
+  <div>
+    <h1>AssessmentHub</h1>
+    <p>A student assessment tracker for deadlines, progress and workload.</p>
+  </div>
+
+  <div id="userPanel" class="user-panel hidden">
+    <p id="userEmail">👤 <span id="usernameDisplay"></span></p>
+<button type="button" onclick="openSettingsModal()" class="settings-btn" title="Settings">⚙</button>
+    <button type="button" id="logoutBtn">Log Out</button>
+  </div>
+</header>
+<section id="authSection" class="auth-section">
+  <div class="auth-card">
+    <h2>AssessmentHub Login</h2>
+    <p>Create an account or log in to access your assessment tracker.</p>
+
+    <label for="emailInput">Email</label>
+    <input type="email" id="emailInput" placeholder="Enter email" />
+
+    <label for="passwordInput">Password</label>
+    <input type="password" id="passwordInput" placeholder="Enter password" />
+
+    <div class="auth-buttons">
+      <button type="button" id="signUpBtn">Sign Up</button>
+      <button type="button" id="loginBtn">Log In</button>
+    </div>
+
+    <p id="authMessage"></p>
+  </div>
+</section>
+<div id="settingsModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>Account Settings</h2>
+
+    <div class="settings-section">
+      <h3>Profile</h3>
+      <label for="usernameInput">Username</label>
+      <input type="text" id="usernameInput" placeholder="Enter a username" />
+      <button type="button" id="saveUsernameBtn" class="primary-btn">Save Username</button>
+      <p id="usernameMessage"></p>
+    </div>
+
+    <div class="settings-section">
+      <h3>Change Password</h3>
+      <label for="newPasswordInput">New Password</label>
+      <input type="password" id="newPasswordInput" placeholder="Enter new password" />
+      <button type="button" id="changePasswordBtn" class="primary-btn">Change Password</button>
+      <p id="passwordMessage"></p>
+    </div>
+
+    <div class="settings-section">
+      <h3>Elective Subjects</h3>
+      <div id="electivesList"></div>
+      <div class="elective-controls">
+        <input type="text" id="settingsElectiveInput" placeholder="e.g. Commerce" />
+        <button type="button" id="settingsAddElectiveBtn">Add Elective</button>
+      </div>
+      <p id="settingsElectiveMessage"></p>
+    </div>
+
+    <div class="settings-section danger-zone">
+      <h3>Danger Zone</h3>
+      <p>Deleting your account is permanent and cannot be undone.</p>
+      <button type="button" id="deleteAccountBtn" class="danger-btn">Delete Account</button>
+      <p id="deleteAccountMessage"></p>
+    </div>
+
+    <div class="modal-buttons">
+      <button type="button" id="closeSettingsBtn" class="secondary-btn">Close</button>
+    </div>
+  </div>
+</div>
+<div id="editModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>Edit Assessment</h2>
+    <form id="editForm">
+      <div class="form-grid">
+        <div>
+          <label for="editSubject">Subject</label>
+          <select id="editSubject" required></select>
+        </div>
+        <div>
+          <label for="editTaskName">Assessment Name</label>
+          <input type="text" id="editTaskName" required />
+        </div>
+        <div>
+          <label for="editDueDate">Due Date</label>
+          <input type="date" id="editDueDate" required />
+        </div>
+        <div>
+          <label for="editWeighting">Weighting (%)</label>
+          <input type="number" id="editWeighting" min="0" max="100" required />
+        </div>
+        <div>
+          <label for="editPriority">Priority</label>
+          <select id="editPriority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div>
+          <label for="editStatus">Status</label>
+          <select id="editStatus">
+            <option value="Not started">Not started</option>
+            <option value="In progress">In progress</option>
+            <option value="Complete">Complete</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="editNotes">Notes</label>
+        <textarea id="editNotes"></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button type="button" id="cancelEditBtn">Cancel</button>
+        <button type="submit" class="primary-btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+ <main id="appSection" class="hidden">
+    <!-- Dashboard summary cards -->
+    <section class="dashboard">
+      <div class="summary-card">
+        <h2 id="totalTasks">0</h2>
+        <p>Total Tasks</p>
+      </div>
+
+      <div class="summary-card">
+        <h2 id="completedTasks">0</h2>
+        <p>Completed</p>
+      </div>
+
+      <div class="summary-card">
+        <h2 id="overdueTasks">0</h2>
+        <p>Overdue</p>
+      </div>
+
+      <div class="summary-card">
+        <h2 id="dueThisWeek">0</h2>
+        <p>Due This Week</p>
+      </div>
+    </section>
+
+    <!-- Workload warning -->
+    <section class="warning-box" id="workloadWarning">
+      No major workload warnings yet.
+    </section>
+
+    <!-- Charts section -->
+    <section class="charts-section">
+      <div class="chart-card">
+        <h2>Tasks by Subject</h2>
+        <canvas id="subjectChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Tasks by Status</h2>
+        <canvas id="statusChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Add assessment form -->
+    <section class="form-section">
+      <h2>Add New Assessment</h2>
+
+      <form id="taskForm">
+        <div class="form-grid">
+          <div>
+  <label for="subject">Subject</label>
+  <select id="subject" required>
+  <option value="">Select a subject</option>
+</select>
+</div>
+
+          <div>
+            <label for="taskName">Assessment Name</label>
+            <input type="text" id="taskName" placeholder="e.g. Motion Depth Study" required />
+          </div>
+
+          <div>
+            <label for="dueDate">Due Date</label>
+            <input type="date" id="dueDate" required />
+          </div>
+
+          <div>
+            <label for="weighting">Weighting (%)</label>
+            <input type="number" id="weighting" placeholder="e.g. 25" min="0" max="100" required />
+          </div>
+
+          <div>
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="Not started">Not started</option>
+              <option value="In progress" selected>In progress</option>
+              <option value="Complete">Complete</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="notes">Notes</label>
+          <textarea id="notes" placeholder="Add any study notes, teacher instructions, or reminders..."></textarea>
+        </div>
+
+        <button type="submit" class="primary-btn">Add Assessment</button>
+      </form>
+
+    </section>
+
+    <!-- Filters -->
+    <section class="filters-section">
+      <h2>Filter and Sort Tasks</h2>
+
+      <div class="filter-controls">
+        <select id="subjectFilter">
+          <option value="all">All Subjects</option>
+        </select>
+
+        <select id="statusFilter">
+          <option value="all">All Statuses</option>
+          <option value="Not started">Not started</option>
+          <option value="In progress">In progress</option>
+          <option value="Complete">Complete</option>
+        </select>
+
+        <button id="sortDueDate" type="button">Sort by Due Date</button>
+      </div>
+    </section>
+
+    <!-- Task list -->
+    <section class="task-list-section">
+      <h2>Assessment Tasks</h2>
+      <div id="taskList" class="task-list">
+        <p class="empty-message">No tasks added yet.</p>
+      </div>
+    </section>
+
+    <!-- Help / training section -->
+    <section class="help-section">
+      <h2>How to Use AssessmentHub</h2>
+
+      <ol>
+        <li>Enter your assessment details in the form.</li>
+        <li>Click <strong>Add Assessment</strong>.</li>
+        <li>Use the dashboard to view your workload.</li>
+        <li>Check the colour labels to see if a task is overdue, due soon, upcoming or complete.</li>
+        <li>Use filters to view tasks by subject or status.</li>
+      </ol>
+    </section>
+  </main>
+
+  <!-- Main JavaScript file -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
